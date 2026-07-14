@@ -1,17 +1,13 @@
 name: Release
 
-# npm release — requires explicit authentication. This workflow never
-# publishes automatically on ordinary pushes. It runs only on:
-#   - Tag push matching v*.*.* (manual, protected)
-#   - workflow_dispatch (manual trigger from the Actions tab)
+# npm release — requires explicit authentication. This workflow is
+# MANUAL ONLY (workflow_dispatch). It never publishes automatically on
+# pushes, tags, or any other event.
 #
 # Required secret: NPM_TOKEN (npm automation/publish token for @orgsdk).
 # Without it, the publish step fails clearly. See README §Publishing.
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
   workflow_dispatch:
 
 permissions:
@@ -51,7 +47,7 @@ jobs:
           fi
 
       # actions/setup-node@v4 — required for npm provenance + registry auth
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
