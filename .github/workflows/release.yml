@@ -1,0 +1,62 @@
+name: Release
+
+# npm release — requires explicit authentication. This workflow never
+# publishes automatically on ordinary pushes. It runs only on:
+#   - Tag push matching v*.*.* (manual, protected)
+#   - workflow_dispatch (manual trigger from the Actions tab)
+#
+# Required secret: NPM_TOKEN (npm automation/publish token for @orgsdk).
+# Without it, the publish step fails clearly. See README §Publishing.
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      # actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      # oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@7ee09f6d25d5974c1c06df967dc3afeca364f283
+        with:
+          bun-version: 1.3.9
+
+      - name: Install dependencies (frozen)
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck + lint + tests
+        run: |
+          bun run typecheck
+          bun run check
+          bun run test
+
+      - name: Verify NPM_TOKEN is present
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "::error::NPM_TOKEN secret is not set. Publication requires explicit npm authentication."
+            echo "See README §Publishing for setup instructions."
+            exit 1
+          fi
+
+      # actions/setup-node@v4 — required for npm provenance + registry auth
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
