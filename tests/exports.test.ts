@@ -12,7 +12,7 @@ describe("public API surface", () => {
 	});
 
 	it("exports VERSION", () => {
-		expect(api.VERSION).toBe("0.2.0");
+		expect(api.VERSION).toBe("0.2.1");
 	});
 
 	it("exports parsePluginManifest + safeParsePluginManifest", () => {

@@ -90,7 +90,7 @@ describe("orgsdk-plugin CLI", () => {
 			const r = run(["generate-schema", "--root", tmpRoot]);
 			expect(r.code).toBe(0);
 			expect(r.stdout).toContain("Generated");
-			expect(VERSION).toBe("0.2.0");
+			expect(VERSION).toBe("0.2.1");
 		} finally {
 			await rm(tmpRoot, { recursive: true, force: true });
 			await rm(DIST, { recursive: true, force: true });

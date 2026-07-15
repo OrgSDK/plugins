@@ -79,6 +79,11 @@
 					"minLength": 1,
 					"type": "string"
 				},
+				"group": {
+					"description": "Vendor/product roll-up key for group pages (e.g. \"google\").",
+					"minLength": 1,
+					"type": "string"
+				},
 				"links": {
 					"additionalProperties": false,
 					"description": "External links.",
@@ -93,18 +98,67 @@
 							"format": "uri",
 							"type": "string"
 						},
+						"privacy": {
+							"description": "Privacy policy URL.",
+							"format": "uri",
+							"type": "string"
+						},
 						"repository": {
-							"description": "Source repository URL.",
+							"description": "Alias of links.sourceRepo; prefer sourceRepo.",
+							"format": "uri",
+							"type": "string"
+						},
+						"sourceRepo": {
+							"description": "Source repository URL (canonical key).",
+							"format": "uri",
+							"type": "string"
+						},
+						"terms": {
+							"description": "Terms of service URL.",
 							"format": "uri",
 							"type": "string"
 						}
 					},
 					"type": "object"
 				},
+				"minRuntimeVersion": {
+					"description": "Minimum OrgSDK runtime version (semver) required.",
+					"pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$",
+					"type": "string"
+				},
 				"permissionsSummary": {
 					"description": "Plain-language permissions summary.",
 					"minLength": 1,
 					"type": "string"
+				},
+				"screenshots": {
+					"description": "Public screenshot URLs for the directory gallery.",
+					"items": {
+						"format": "uri",
+						"type": "string"
+					},
+					"type": "array"
+				},
+				"seoOverview": {
+					"additionalProperties": false,
+					"description": "Grounded SEO overview for the plugin directory page.",
+					"properties": {
+						"heading": {
+							"description": "SEO section heading.",
+							"minLength": 1,
+							"type": "string"
+						},
+						"paragraph": {
+							"description": "SEO section body paragraph.",
+							"minLength": 1,
+							"type": "string"
+						}
+					},
+					"required": [
+						"heading",
+						"paragraph"
+					],
+					"type": "object"
 				},
 				"tagline": {
 					"description": "One-line summary.",

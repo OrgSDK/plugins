@@ -1,0 +1,41 @@
+{
+	"$schema": "https://orgsdk.ai/schemas/plugin-manifest.v1.json",
+	"name": "google-sheets",
+	"version": "1.0.1",
+	"description": "Google Sheets and Google Tasks share one Google connection.",
+	"entry": "index.ts",
+	"auth": {
+		"type": "oauth2",
+		"provider": "google-oauth",
+		"label": "Google (Connect Google)",
+		"scopes": [
+			"https://www.googleapis.com/auth/spreadsheets",
+			"https://www.googleapis.com/auth/tasks"
+		],
+		"callbackPath": "/callback",
+		"firstParty": true
+	},
+	"marketplace": {
+		"group": "google",
+		"displayName": "Google Sheets",
+		"tagline": "Read and write Google Sheets from agent workflows.",
+		"category": "Data & AI",
+		"tags": ["spreadsheets", "google", "data"],
+		"useCases": [
+			"Sync CRM or form data into a structured sheet table",
+			"Generate weekly reports by appending agent run results",
+			"Read a sheet as a config or lookup source for an agent"
+		],
+		"permissionsSummary": "Access Google Sheets and Tasks data via OAuth.",
+		"seoOverview": {
+			"heading": "Integrate AI agents with Google Sheets",
+			"paragraph": "Connect Google Sheets to an OrgSDK agent team and give workflows direct read and write access to your spreadsheets."
+		},
+		"screenshots": [],
+		"links": {
+			"homepage": "https://workspace.google.com/products/sheets/",
+			"docs": "https://developers.google.com/sheets/api/guides/concepts"
+		},
+		"minRuntimeVersion": "0.0.0"
+	}
+}

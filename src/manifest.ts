@@ -14,6 +14,7 @@
  */
 
 import { z } from "zod";
+import { formatManifestError } from "./manifest-error";
 
 /** Stable, branded editor URL for the generated JSON Schema. */
 export const MANIFEST_SCHEMA_URL =
@@ -134,13 +135,39 @@ const marketplaceLinksSchema = z
 	.object({
 		homepage: z.string().url().optional().describe("Homepage URL."),
 		docs: z.string().url().optional().describe("Documentation URL."),
-		repository: z.string().url().optional().describe("Source repository URL."),
+		privacy: z.string().url().optional().describe("Privacy policy URL."),
+		terms: z.string().url().optional().describe("Terms of service URL."),
+		sourceRepo: z
+			.string()
+			.url()
+			.optional()
+			.describe("Source repository URL (canonical key)."),
+		repository: z
+			.string()
+			.url()
+			.optional()
+			.describe("Alias of links.sourceRepo; prefer sourceRepo."),
 	})
 	.strict()
 	.describe("External links shown in the marketplace listing.");
 
+const marketplaceSeoOverviewSchema = z
+	.object({
+		heading: z.string().min(1).describe("SEO section heading."),
+		paragraph: z.string().min(1).describe("SEO section body paragraph."),
+	})
+	.strict()
+	.describe(
+		"Grounded SEO overview block rendered on the plugin directory page.",
+	);
+
 const marketplaceSchema = z
 	.object({
+		group: z
+			.string()
+			.min(1)
+			.optional()
+			.describe('Vendor/product roll-up key for group pages (e.g. "google").'),
 		displayName: z.string().min(1).optional().describe("Listing display name."),
 		category: z.string().min(1).optional().describe("Marketplace category."),
 		tagline: z.string().min(1).optional().describe("One-line summary."),
@@ -157,6 +184,18 @@ const marketplaceSchema = z
 			.min(1)
 			.optional()
 			.describe("Plain-language permissions summary."),
+		screenshots: z
+			.array(z.string().url())
+			.optional()
+			.describe("Public screenshot URLs for the directory gallery."),
+		seoOverview: marketplaceSeoOverviewSchema
+			.optional()
+			.describe("Grounded SEO overview for the plugin directory page."),
+		minRuntimeVersion: z
+			.string()
+			.regex(semverRe)
+			.optional()
+			.describe("Minimum OrgSDK runtime version (semver) required."),
 		links: marketplaceLinksSchema.optional().describe("External links."),
 	})
 	.strict()
@@ -245,27 +284,3 @@ export function safeParsePluginManifest(raw: unknown): SafeParseResult {
 
 /** Backward-compatible alias for {@link safeParsePluginManifest}. */
 export const safeParseAuthorManifest = safeParsePluginManifest;
-
-function formatManifestError(error: z.ZodError): string {
-	const reserved = RESERVED_RUNTIME_FIELDS as readonly string[];
-	const lines: string[] = [];
-	for (const issue of error.issues) {
-		if (issue.code === "unrecognized_keys") {
-			for (const key of (issue as { keys: string[] }).keys) {
-				if (reserved.includes(key)) {
-					lines.push(
-						`(root): "${key}" is a runtime-enriched field set by the catalog — remove it from your manifest`,
-					);
-				} else {
-					lines.push(
-						`(root): unknown field "${key}" — remove it or move it under a documented extension`,
-					);
-				}
-			}
-			continue;
-		}
-		const path = issue.path.length > 0 ? issue.path.join(".") : "(root)";
-		lines.push(`${path}: ${issue.message}`);
-	}
-	return lines.join("\n");
-}

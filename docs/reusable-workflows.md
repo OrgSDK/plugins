@@ -19,9 +19,9 @@ In the **caller** (plugin) repository:
 
 1. Depend on the SDK so the `orgsdk-plugin` CLI resolves:
    ```json
-   { "devDependencies": { "@orgsdk/plugins": "^0.2.0" } }
+   { "devDependencies": { "@orgsdk/plugins": "^0.2.1" } }
    ```
-2. Define these npm scripts (the v0.2.0 contract):
+2. Define these npm scripts (the v0.2.1 contract):
    ```json
    {
      "scripts": {
@@ -45,7 +45,7 @@ Pin the call to an **immutable ref**. A commit SHA is the strongest guarantee:
 uses: OrgSDK/plugins/.github/workflows/plugin-ci.yml@<full-40-char-sha>
 ```
 
-A release tag (`@v0.2.0`) is readable and acceptable, but a tag can be moved by
+A release tag (`@v0.2.1`) is readable and acceptable, but a tag can be moved by
 repo admins; prefer a SHA for supply-chain safety.
 
 ## CI — caller workflow

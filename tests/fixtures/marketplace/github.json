@@ -1,0 +1,30 @@
+{
+	"$schema": "https://orgsdk.ai/schemas/plugin-manifest.v1.json",
+	"name": "github",
+	"version": "1.0.1",
+	"description": "GitHub repository operations: issues, PRs, branches, Actions, releases",
+	"entry": "index.ts",
+	"auth": {
+		"type": "token",
+		"provider": "github",
+		"label": "GitHub personal access token",
+		"hint": "Create a classic token at github.com/settings/tokens."
+	},
+	"marketplace": {
+		"displayName": "GitHub",
+		"category": "Developer",
+		"tagline": "Put your repositories in the hands of a persistent agent team.",
+		"tags": ["devops", "git"],
+		"useCases": [
+			"Auto-triage and label incoming issues",
+			"Review pull requests and request reviewers",
+			"React to failed CI runs"
+		],
+		"permissionsSummary": "Read and write GitHub issues, pull requests, branches, files, Actions, and releases.",
+		"links": {
+			"homepage": "https://github.com",
+			"docs": "https://docs.github.com/en/rest",
+			"sourceRepo": "https://github.com/octokit/octokit.js"
+		}
+	}
+}

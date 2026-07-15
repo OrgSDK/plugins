@@ -110,7 +110,10 @@ Every manifest begins with the canonical `$schema` for editor completion:
 
 - **One source of truth:** the Zod author schema (`authorManifestSchema`) is canonical. The public TypeScript type (`AuthorManifest` / `PluginManifest`) is inferred from it, and the JSON Schema is generated from it.
 - **Strict:** unknown top-level and marketplace keys are rejected so typos surface locally.
-- **Typed marketplace:** `marketplace` has a real schema (`displayName`, `category`, `tagline`, `tags`, `useCases`, `permissionsSummary`, `links`), not free-form.
+- **Typed marketplace:** `marketplace` has a real schema covering the full
+  official metadata surface (`group`, `displayName`, `category`, `tagline`,
+  `tags`, `useCases`, `permissionsSummary`, `screenshots`, `seoOverview`,
+  `minRuntimeVersion`, `links`), not free-form.
 - **Reserved fields:** `dependencies` and `bundled` are runtime-enriched by the catalog and rejected if set by an author.
 - **Semver:** `version` is validated as semver and must match `package.json`.
 
@@ -191,7 +194,7 @@ To publish:
 
 1. **Set up npm auth:** Add an npm automation token as the `NPM_TOKEN` secret in the GitHub repository settings (Settings → Secrets and variables → Actions).
 2. **Create a release environment:** Create a `release` environment in GitHub (Settings → Environments) and add required reviewers if desired.
-3. **Tag a release:** `git tag v0.2.0 && git push origin v0.2.0` — the `release.yml` workflow runs typecheck, lint, tests, verifies `NPM_TOKEN`, then publishes with provenance.
+3. **Tag a release:** `git tag v0.2.1 && git push origin v0.2.1` — the `release.yml` workflow runs typecheck, lint, tests, verifies `NPM_TOKEN`, then publishes with provenance.
 
 The release workflow **never publishes on ordinary pushes** — only on manual dispatch. It fails clearly if `NPM_TOKEN` is absent.
 

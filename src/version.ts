@@ -5,4 +5,4 @@
  * package's own release is not enforced programmatically, but the export is
  * consumed by tests and downstream tooling).
  */
-export const VERSION = "0.2.0";
+export const VERSION = "0.2.1";

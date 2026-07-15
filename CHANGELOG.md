@@ -6,7 +6,33 @@ This project follows [Keep a Changelog](https://keepachangelog.com/) and uses
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-07-15
+
 ### Added
+- **Full marketplace metadata coverage.** The canonical `marketplace` schema now
+  validates every field already used by official OrgSDK plugin manifests,
+  eliminating the platform workaround that previously skipped marketplace
+  validation (because real manifests carried fields the strict 0.2.0 schema
+  rejected). All additions are optional and backwards-compatible.
+  - `group` — vendor/product roll-up key for directory group pages (e.g.
+    `"google"`).
+  - `screenshots` — array of public screenshot URLs for the directory gallery.
+  - `seoOverview` — grounded SEO block (`{ heading, paragraph }`) rendered on
+    the plugin directory page; strict nested validation (both keys required,
+    unknown keys rejected).
+  - `minRuntimeVersion` — minimum OrgSDK runtime version, validated as semver.
+  - `links.privacy`, `links.terms` — privacy-policy and terms-of-service URLs.
+  - `links.sourceRepo` — canonical source-repository link key (matches the
+    internal `PluginManifestMarketplace` type).
+  - `links.repository` — preserved as a documented alias of `sourceRepo`.
+- **Regression fixtures** (`tests/fixtures/marketplace/`) mirroring the
+  marketplace shapes of the `github`, `google-sheets`, and `google-tasks`
+  manifests, plus a dedicated test suite (`tests/marketplace-fixtures.test.ts`)
+  that validates each fixture end-to-end and asserts strict nested rejection of
+  unknown keys, partial `seoOverview`, non-semver `minRuntimeVersion`, and
+  non-URL screenshots/links.
+- Every new field carries an editor-facing description so generated JSON Schema
+  hints and IDE autocomplete cover the full surface.
 - **Reusable GitHub workflows** for plugin repositories — centrally maintained
   CI and catalog-publish pipelines that consumers call with `uses:` instead of
   duplicating mechanics:
@@ -28,6 +54,14 @@ This project follows [Keep a Changelog](https://keepachangelog.com/) and uses
 - **Reusable-workflow docs** (`docs/reusable-workflows.md`) with the minimal
   caller workflow, one-time setup table, opt-in/dry-run truth table, and exact
   template/Serper caller examples.
+
+### Changed
+- Package version bumped to `0.2.1`.
+
+### Internal
+- Extracted `formatManifestError` into `src/manifest-error.ts` so the schema
+  module stays under the 300-line file-size budget after the marketplace
+  expansion.
 
 ## [0.2.0] — 2026-07-15
 

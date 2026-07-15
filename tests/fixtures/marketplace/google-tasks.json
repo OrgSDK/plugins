@@ -1,0 +1,30 @@
+{
+	"$schema": "https://orgsdk.ai/schemas/plugin-manifest.v1.json",
+	"name": "google-tasks",
+	"version": "1.0.1",
+	"description": "Google Tasks. Shares the google-oauth credential with google-sheets.",
+	"entry": "index.ts",
+	"auth": {
+		"type": "oauth2",
+		"provider": "google-oauth",
+		"label": "Google (shared — connect via google-sheets)",
+		"scopes": ["https://www.googleapis.com/auth/tasks"]
+	},
+	"marketplace": {
+		"group": "google",
+		"displayName": "Google Tasks",
+		"category": "Productivity",
+		"tagline": "Create, update, and complete Google Tasks from agent workflows.",
+		"tags": ["tasks", "google", "productivity"],
+		"useCases": [
+			"Create tasks from emails, issues, or agent observations",
+			"Mark tasks complete and clear finished items on a schedule",
+			"Sync a task list to a sheet or report"
+		],
+		"permissionsSummary": "Read, create, update, complete, and delete Google Tasks via OAuth.",
+		"links": {
+			"homepage": "https://support.google.com/tasks",
+			"docs": "https://developers.google.com/tasks/reference/rest"
+		}
+	}
+}
