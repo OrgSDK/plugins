@@ -135,3 +135,19 @@ describe("no workflow logs secrets", () => {
 		}
 	});
 });
+
+describe("no malformed GitHub Actions expressions", () => {
+	// An empty interpolation in a run block (even inside a YAML comment) is a
+	// fatal parse error: "An expression was expected". GitHub evaluates every
+	// ${{ ... }} in a run: | block, including comment text.
+	it("contains no empty interpolation anywhere in any workflow file", async () => {
+		const EMPTY_EXPR = /\$\{\{\s*\}\}/;
+		for (const f of await listWorkflows()) {
+			const y = await readWorkflow(f);
+			expect(
+				y,
+				`${f}: empty GitHub Actions interpolation is a runtime parse error`,
+			).not.toMatch(EMPTY_EXPR);
+		}
+	});
+});

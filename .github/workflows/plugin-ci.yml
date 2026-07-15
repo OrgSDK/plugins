@@ -64,7 +64,8 @@ jobs:
           # Ensure the base ref is present in the local clone (PR checkouts may
           # not fetch the base branch tip by default). Best-effort; the guard
           # no-ops gracefully if the ref still cannot be resolved. BASE_BRANCH is
-          # passed via env (not inline ${{ }}) to avoid any script-injection surface.
+          # passed via env var (never interpolated inline) to avoid any
+          # script-injection surface.
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ -n "$BASE_BRANCH" ]; then
             git fetch --no-tags --depth=1 origin "$BASE_BRANCH" 2>/dev/null || true
           fi
