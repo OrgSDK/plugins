@@ -1,10 +1,11 @@
 /**
- * @orgsdk/plugins — public authoring contract for OrgSDK plugin development.
+ * @orgsdk/plugins — public authoring contract + SDK for OrgSDK plugins.
  *
  * Re-exports everything a plugin author needs:
  *   - Types: SafeFunction, PluginModule, PluginFactory, PluginContext, …
  *   - Stores: CredentialStore, ConfigStore, PluginLogger (structural)
- *   - Manifest validation: parsePluginManifest, safeParsePluginManifest
+ *   - Manifest: canonical Zod schema, inferred type, parse helpers
+ *   - Schema generation: JSON Schema (Draft 2020-12) + drift check
  *   - Zod instance (`z`) for config schemas
  *
  * Importing types from this package is always safe (erased at compile time).
@@ -28,21 +29,35 @@
  * ```
  */
 
-// Package version — single source of truth.
-export const VERSION = "0.1.0";
-
-// Zod instance — re-exported so authors can optionally import from one place.
+// Zod instance — re-exported so authors can import from one place.
 export { z } from "zod";
 export type {
+	AuthorManifest,
+	PluginManifest,
 	PluginManifestSchema,
 	SafeParseResult,
 } from "./manifest";
-// Manifest validation (runtime).
+
+// Canonical manifest schema + parse helpers + reserved-field registry.
 export {
+	authorManifestSchema,
+	MANIFEST_SCHEMA_URL,
+	parseAuthorManifest,
 	parsePluginManifest,
 	pluginManifestSchema,
+	RESERVED_RUNTIME_FIELDS,
+	safeParseAuthorManifest,
 	safeParsePluginManifest,
 } from "./manifest";
+export type { DriftResult } from "./schema-gen";
+
+// JSON Schema generation + drift guard (release build / tests).
+export {
+	checkSchemaDrift,
+	generateManifestJsonSchema,
+	serializeManifestJsonSchema,
+	writeManifestJsonSchema,
+} from "./schema-gen";
 export type {
 	ConfigStore,
 	CredentialMetadata,
@@ -65,7 +80,6 @@ export type {
 	PluginConfigDefinition,
 	PluginContext,
 	PluginFactory,
-	PluginManifest,
 	PluginModule,
 	PluginTableSchema,
 	SafeFunction,
@@ -74,3 +88,5 @@ export type {
 	SafeFunctionMetadata,
 	SafeFunctionTag,
 } from "./types";
+// Package version — single source of truth.
+export { VERSION } from "./version";

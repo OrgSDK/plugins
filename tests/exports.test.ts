@@ -12,7 +12,7 @@ describe("public API surface", () => {
 	});
 
 	it("exports VERSION", () => {
-		expect(api.VERSION).toBe("0.1.0");
+		expect(api.VERSION).toBe("0.2.0");
 	});
 
 	it("exports parsePluginManifest + safeParsePluginManifest", () => {
@@ -20,9 +20,25 @@ describe("public API surface", () => {
 		expect(typeof api.safeParsePluginManifest).toBe("function");
 	});
 
-	it("exports pluginManifestSchema", () => {
-		expect(api.pluginManifestSchema).toBeDefined();
-		expect(typeof api.pluginManifestSchema.safeParse).toBe("function");
+	it("exports authorManifestSchema + pluginManifestSchema alias", () => {
+		expect(api.authorManifestSchema).toBeDefined();
+		expect(api.pluginManifestSchema).toBe(api.authorManifestSchema);
+		expect(typeof api.authorManifestSchema.safeParse).toBe("function");
+	});
+
+	it("exports canonical schema URL + reserved fields", () => {
+		expect(api.MANIFEST_SCHEMA_URL).toBe(
+			"https://orgsdk.ai/schemas/plugin-manifest.v1.json",
+		);
+		expect(api.RESERVED_RUNTIME_FIELDS).toContain("dependencies");
+	});
+
+	it("exports JSON Schema generation helpers", () => {
+		expect(typeof api.generateManifestJsonSchema).toBe("function");
+		expect(typeof api.checkSchemaDrift).toBe("function");
+		const js = api.generateManifestJsonSchema();
+		expect(js.$id).toBe(api.MANIFEST_SCHEMA_URL);
+		expect(js.$schema).toBe("https://json-schema.org/draft/2020-12/schema");
 	});
 
 	it("re-exports Zod's z from the same module identity as direct zod import", async () => {

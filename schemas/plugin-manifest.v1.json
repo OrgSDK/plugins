@@ -1,0 +1,349 @@
+{
+	"$id": "https://orgsdk.ai/schemas/plugin-manifest.v1.json",
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"additionalProperties": false,
+	"description": "OrgSDK plugin author manifest.",
+	"properties": {
+		"$schema": {
+			"const": "https://orgsdk.ai/schemas/plugin-manifest.v1.json",
+			"description": "JSON Schema URL for editor completion. Copy verbatim.",
+			"type": "string"
+		},
+		"auth": {
+			"additionalProperties": false,
+			"description": "Credential declaration.",
+			"properties": {
+				"callbackPath": {
+					"description": "OAuth2 callback path.",
+					"type": "string"
+				},
+				"firstParty": {
+					"description": "Whether first-party OAuth is available.",
+					"type": "boolean"
+				},
+				"hint": {
+					"description": "Authoring hint shown to operators.",
+					"type": "string"
+				},
+				"label": {
+					"description": "Human label for the credential field.",
+					"type": "string"
+				},
+				"provider": {
+					"description": "Stable provider id credentials are stored under.",
+					"minLength": 1,
+					"type": "string"
+				},
+				"scopes": {
+					"description": "OAuth2 scopes to request.",
+					"items": {
+						"type": "string"
+					},
+					"type": "array"
+				},
+				"type": {
+					"description": "Credential model used by this plugin.",
+					"enum": [
+						"oauth2",
+						"token"
+					],
+					"type": "string"
+				}
+			},
+			"required": [
+				"type",
+				"provider"
+			],
+			"type": "object"
+		},
+		"description": {
+			"description": "Short human-readable description.",
+			"type": "string"
+		},
+		"entry": {
+			"description": "Entry point file relative to the plugin directory.",
+			"minLength": 1,
+			"type": "string"
+		},
+		"marketplace": {
+			"additionalProperties": false,
+			"description": "Marketplace listing metadata.",
+			"properties": {
+				"category": {
+					"description": "Marketplace category.",
+					"minLength": 1,
+					"type": "string"
+				},
+				"displayName": {
+					"description": "Listing display name.",
+					"minLength": 1,
+					"type": "string"
+				},
+				"links": {
+					"additionalProperties": false,
+					"description": "External links.",
+					"properties": {
+						"docs": {
+							"description": "Documentation URL.",
+							"format": "uri",
+							"type": "string"
+						},
+						"homepage": {
+							"description": "Homepage URL.",
+							"format": "uri",
+							"type": "string"
+						},
+						"repository": {
+							"description": "Source repository URL.",
+							"format": "uri",
+							"type": "string"
+						}
+					},
+					"type": "object"
+				},
+				"permissionsSummary": {
+					"description": "Plain-language permissions summary.",
+					"minLength": 1,
+					"type": "string"
+				},
+				"tagline": {
+					"description": "One-line summary.",
+					"minLength": 1,
+					"type": "string"
+				},
+				"tags": {
+					"description": "Search/discovery tags.",
+					"items": {
+						"minLength": 1,
+						"type": "string"
+					},
+					"type": "array"
+				},
+				"useCases": {
+					"description": "Bulleted use cases.",
+					"items": {
+						"minLength": 1,
+						"type": "string"
+					},
+					"type": "array"
+				}
+			},
+			"type": "object"
+		},
+		"mcp": {
+			"anyOf": [
+				{
+					"additionalProperties": false,
+					"description": "MCP server over streamable HTTP.",
+					"properties": {
+						"connectTimeoutMs": {
+							"description": "Connect timeout.",
+							"exclusiveMinimum": 0,
+							"maximum": 9007199254740991,
+							"type": "integer"
+						},
+						"docs": {
+							"description": "Documentation URL.",
+							"type": "string"
+						},
+						"headers": {
+							"additionalProperties": {
+								"type": "string"
+							},
+							"description": "Static request headers.",
+							"propertyNames": {
+								"type": "string"
+							},
+							"type": "object"
+						},
+						"timeoutMs": {
+							"description": "Request timeout.",
+							"exclusiveMinimum": 0,
+							"maximum": 9007199254740991,
+							"type": "integer"
+						},
+						"tools": {
+							"description": "Allow-list of tool names.",
+							"items": {
+								"type": "string"
+							},
+							"type": "array"
+						},
+						"transport": {
+							"const": "http",
+							"description": "Streamable HTTP transport.",
+							"type": "string"
+						},
+						"url": {
+							"description": "MCP server endpoint URL.",
+							"format": "uri",
+							"type": "string"
+						}
+					},
+					"required": [
+						"transport",
+						"url"
+					],
+					"type": "object"
+				},
+				{
+					"additionalProperties": false,
+					"description": "MCP server over SSE.",
+					"properties": {
+						"connectTimeoutMs": {
+							"description": "Connect timeout.",
+							"exclusiveMinimum": 0,
+							"maximum": 9007199254740991,
+							"type": "integer"
+						},
+						"docs": {
+							"description": "Documentation URL.",
+							"type": "string"
+						},
+						"headers": {
+							"additionalProperties": {
+								"type": "string"
+							},
+							"description": "Static request headers.",
+							"propertyNames": {
+								"type": "string"
+							},
+							"type": "object"
+						},
+						"timeoutMs": {
+							"description": "Request timeout.",
+							"exclusiveMinimum": 0,
+							"maximum": 9007199254740991,
+							"type": "integer"
+						},
+						"tools": {
+							"description": "Allow-list of tool names.",
+							"items": {
+								"type": "string"
+							},
+							"type": "array"
+						},
+						"transport": {
+							"const": "sse",
+							"description": "Server-Sent Events transport.",
+							"type": "string"
+						},
+						"url": {
+							"description": "MCP server endpoint URL.",
+							"format": "uri",
+							"type": "string"
+						}
+					},
+					"required": [
+						"transport",
+						"url"
+					],
+					"type": "object"
+				}
+			],
+			"description": "MCP server config (required when pluginType is mcp)."
+		},
+		"name": {
+			"description": "Plugin slug — unique catalog identifier (lowercase, kebab-case).",
+			"minLength": 1,
+			"type": "string"
+		},
+		"pluginType": {
+			"description": "Plugin runtime type. Defaults to native.",
+			"enum": [
+				"native",
+				"mcp"
+			],
+			"type": "string"
+		},
+		"tables": {
+			"description": "Plugin-owned durable tables.",
+			"items": {
+				"additionalProperties": false,
+				"description": "A plugin-owned durable table.",
+				"properties": {
+					"columns": {
+						"description": "Column definitions.",
+						"items": {
+							"additionalProperties": false,
+							"description": "A plugin-owned table column.",
+							"properties": {
+								"default": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"type": "number"
+										},
+										{
+											"type": "boolean"
+										},
+										{
+											"type": "null"
+										}
+									],
+									"description": "Column default value."
+								},
+								"description": {
+									"description": "Column documentation.",
+									"type": "string"
+								},
+								"name": {
+									"description": "Column name.",
+									"minLength": 1,
+									"type": "string"
+								},
+								"notNull": {
+									"description": "NOT NULL constraint.",
+									"type": "boolean"
+								},
+								"tsType": {
+									"description": "TypeScript type override.",
+									"type": "string"
+								},
+								"type": {
+									"description": "Postgres column type (TEXT, INTEGER, …).",
+									"minLength": 1,
+									"type": "string"
+								}
+							},
+							"required": [
+								"name",
+								"type"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"description": {
+						"description": "Table documentation.",
+						"type": "string"
+					},
+					"name": {
+						"description": "Table name.",
+						"minLength": 1,
+						"type": "string"
+					}
+				},
+				"required": [
+					"name",
+					"columns"
+				],
+				"type": "object"
+			},
+			"type": "array"
+		},
+		"version": {
+			"description": "Semver version; must match package.json version.",
+			"pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$",
+			"type": "string"
+		}
+	},
+	"required": [
+		"name",
+		"version",
+		"description"
+	],
+	"type": "object"
+}

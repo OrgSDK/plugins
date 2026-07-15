@@ -1,7 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import {
+	authorManifestSchema,
+	MANIFEST_SCHEMA_URL,
 	parsePluginManifest,
-	pluginManifestSchema,
+	RESERVED_RUNTIME_FIELDS,
 	safeParsePluginManifest,
 } from "../src/manifest";
 
@@ -19,20 +21,41 @@ describe("parsePluginManifest", () => {
 		expect(data.name).toBe("my-plugin");
 	});
 
-	it("preserves unknown keys via passthrough", () => {
-		const data = parsePluginManifest({ ...VALID, customField: 42 });
-		expect(data.customField).toBe(42);
+	it("accepts $schema matching the canonical URL", () => {
+		const data = parsePluginManifest({
+			...VALID,
+			$schema: MANIFEST_SCHEMA_URL,
+		});
+		expect(data.$schema).toBe(MANIFEST_SCHEMA_URL);
 	});
 
-	it("accepts marketplace metadata", () => {
+	it("rejects a mistyped $schema URL", () => {
+		expect(() =>
+			parsePluginManifest({
+				...VALID,
+				$schema: "https://wrong.example/x.json",
+			}),
+		).toThrow();
+	});
+
+	it("rejects unknown top-level keys (typo catching)", () => {
+		expect(() => parsePluginManifest({ ...VALID, customField: 42 })).toThrow();
+	});
+
+	it("accepts structured marketplace metadata", () => {
 		const data = parsePluginManifest({
 			...VALID,
 			marketplace: { displayName: "My Plugin", tags: ["search"] },
 		});
-		expect(data.marketplace).toEqual({
-			displayName: "My Plugin",
-			tags: ["search"],
+		expect(data.marketplace?.displayName).toBe("My Plugin");
+	});
+
+	it("rejects unknown marketplace keys", () => {
+		const result = safeParsePluginManifest({
+			...VALID,
+			marketplace: { displayName: "X", bogus: true },
 		});
+		expect(result.success).toBe(false);
 	});
 
 	it("throws on missing name", () => {
@@ -46,6 +69,28 @@ describe("parsePluginManifest", () => {
 			parsePluginManifest({ ...VALID, auth: { type: "basic", provider: "x" } }),
 		).toThrow();
 	});
+
+	it("rejects a non-semver version", () => {
+		const result = safeParsePluginManifest({ ...VALID, version: "1.0" });
+		expect(result.success).toBe(false);
+	});
+});
+
+describe("reserved runtime-enriched fields", () => {
+	it("exports the reserved field list", () => {
+		expect(RESERVED_RUNTIME_FIELDS).toContain("dependencies");
+		expect(RESERVED_RUNTIME_FIELDS).toContain("bundled");
+	});
+
+	for (const field of RESERVED_RUNTIME_FIELDS) {
+		it(`rejects author-set "${field}" with a reserved-field message`, () => {
+			const result = safeParsePluginManifest({ ...VALID, [field]: "x" });
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.error).toContain("runtime-enriched");
+			}
+		});
+	}
 });
 
 describe("safeParsePluginManifest", () => {
@@ -60,6 +105,15 @@ describe("safeParsePluginManifest", () => {
 		if (!result.success) {
 			expect(typeof result.error).toBe("string");
 			expect(result.error.length).toBeGreaterThan(0);
+		}
+	});
+
+	it("reports multiple issues", () => {
+		const result = safeParsePluginManifest({ name: "", version: "bad" });
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			const lines = result.error.split("\n");
+			expect(lines.length).toBeGreaterThanOrEqual(2);
 		}
 	});
 
@@ -82,9 +136,9 @@ describe("safeParsePluginManifest", () => {
 	});
 });
 
-describe("pluginManifestSchema", () => {
+describe("authorManifestSchema", () => {
 	it("accepts tables with column definitions", () => {
-		const result = pluginManifestSchema.safeParse({
+		const result = authorManifestSchema.safeParse({
 			...VALID,
 			tables: [
 				{
@@ -94,5 +148,16 @@ describe("pluginManifestSchema", () => {
 			],
 		});
 		expect(result.success).toBe(true);
+	});
+
+	it("infers the AuthorManifest type with marketplace", () => {
+		const m = parsePluginManifest({
+			...VALID,
+			marketplace: {
+				displayName: "X",
+				links: { homepage: "https://x.example" },
+			},
+		});
+		expect(m.marketplace?.links?.homepage).toBe("https://x.example");
 	});
 });

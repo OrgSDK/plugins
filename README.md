@@ -1,8 +1,8 @@
 # @orgsdk/plugins
 
-Public authoring contract, types, and validation helpers for **OrgSDK plugin developers**.
+Authoring contract, types, validation, **CLI**, and release mechanics for **OrgSDK plugin developers**.
 
-This package provides the stable TypeScript types and manifest validation that a plugin author needs — without importing any private daemon, platform, or database internals. It is the single canonical contract between plugin authors and the OrgSDK runtime.
+This package is the single canonical contract between plugin authors and the OrgSDK runtime: the TypeScript types, the Zod manifest schema (from which the public type and JSON Schema are generated), the `orgsdk-plugin` CLI for validating, packaging, versioning, and publishing plugins, and the reusable library functions beneath it.
 
 ## Installation
 
@@ -56,30 +56,132 @@ const createPlugin: PluginFactory = (ctx) => {
 export default createPlugin;
 ```
 
-## What's included
+## The `orgsdk-plugin` CLI
 
-| Category | Exports |
+A Bun-native CLI replaces the per-repository `scripts/` directory. A plugin repository delegates its package scripts to the SDK:
+
+```json
+{
+  "scripts": {
+    "validate": "orgsdk-plugin validate",
+    "package": "orgsdk-plugin package",
+    "version-guard": "orgsdk-plugin version-guard",
+    "publish": "orgsdk-plugin publish",
+    "build": "orgsdk-plugin validate && orgsdk-plugin package"
+  }
+}
+```
+
+### Commands
+
+| Command | Outcome |
 |---|---|
-| **Types** | `SafeFunction`, `SafeFunctionMetadata`, `SafeFunctionDocs`, `PluginModule`, `PluginFactory`, `PluginContext`, `PluginManifest`, `AuthProvider`, `AuthMeta`, `HttpEndpoint`, `PluginConfigDefinition`, `PluginTableSchema`, `CredentialStore`, `ConfigStore`, `PluginLogger`, MCP types |
-| **Runtime** | `z` (Zod instance re-export), `parsePluginManifest`, `safeParsePluginManifest`, `pluginManifestSchema` |
+| `orgsdk-plugin validate` | Validate the manifest (canonical Zod schema), entry point, and source isolation with actionable file/field errors. |
+| `orgsdk-plugin package` | Build the deterministic catalog artifact: staged source, generated `package.json` (runtime deps), checksum manifest, and tarball. No network. |
+| `orgsdk-plugin version-guard` | Keep package/manifest versions synchronized and require a bump when publishable content changes. |
+| `orgsdk-plugin publish` | Dry-run by default. Publishes a validated artifact when an authorized catalog token and URL are present. Never logs tokens. |
+| `orgsdk-plugin generate-schema` | Regenerate the committed JSON Schema from the Zod source. |
 
-### Manifest validation
+### Options
+
+| Option | Applies to | Default |
+|---|---|---|
+| `--root <dir>` | all | `cwd` |
+| `--plugin-dir <dir>` | all | `<root>/plugin` |
+| `--url <url>` | publish | `ORGSDK_CATALOG_URL` env |
+| `--token <token>` | publish | `ORGSDK_PUBLISH_TOKEN` env |
+| `--publish` | publish | omitted → dry-run |
+
+`publish` defaults to **dry-run** and makes no network call. A real publish requires `--publish` **and** a token. Tokens are placed only in the `Authorization` header and are never logged or echoed in errors.
+
+## The manifest contract
+
+Every manifest begins with the canonical `$schema` for editor completion:
+
+```json
+{
+  "$schema": "https://orgsdk.ai/schemas/plugin-manifest.v1.json",
+  "name": "my-plugin",
+  "version": "0.1.0",
+  "description": "What this plugin does.",
+  "entry": "index.ts"
+}
+```
+
+- **One source of truth:** the Zod author schema (`authorManifestSchema`) is canonical. The public TypeScript type (`AuthorManifest` / `PluginManifest`) is inferred from it, and the JSON Schema is generated from it.
+- **Strict:** unknown top-level and marketplace keys are rejected so typos surface locally.
+- **Typed marketplace:** `marketplace` has a real schema (`displayName`, `category`, `tagline`, `tags`, `useCases`, `permissionsSummary`, `links`), not free-form.
+- **Reserved fields:** `dependencies` and `bundled` are runtime-enriched by the catalog and rejected if set by an author.
+- **Semver:** `version` is validated as semver and must match `package.json`.
 
 ```ts
 import { safeParsePluginManifest } from "@orgsdk/plugins";
 
 const result = safeParsePluginManifest(parsedJson);
 if (!result.success) {
-  console.error(result.error); // human-readable
+  console.error(result.error); // multi-line, field-path errors
 }
 ```
 
+## JSON Schema
+
+The committed Draft 2020-12 schema lives at `schemas/plugin-manifest.v1.json` and ships in the npm package. It is importable as a subpath export:
+
+```js
+import schema from "@orgsdk/plugins/schema/plugin-manifest.v1.json";
+```
+
+Authors put the **branded URL** (not the package path) in every manifest's `$schema`:
+
+```json
+{ "$schema": "https://orgsdk.ai/schemas/plugin-manifest.v1.json" }
+```
+
+A drift guard (`bun run schema:check`) fails if the committed file diverges from the Zod source. Regenerate after editing `src/manifest.ts`:
+
+```sh
+bun run generate-schema
+```
+
+## What's included
+
+| Category | Exports |
+|---|---|
+| **Types** | `SafeFunction`, `SafeFunctionMetadata`, `SafeFunctionDocs`, `PluginModule`, `PluginFactory`, `PluginContext`, `AuthorManifest`, `PluginManifest`, `AuthProvider`, `AuthMeta`, `HttpEndpoint`, `PluginConfigDefinition`, `PluginTableSchema`, `CredentialStore`, `ConfigStore`, `PluginLogger`, MCP types |
+| **Manifest** | `authorManifestSchema`, `pluginManifestSchema`, `parsePluginManifest`, `safeParsePluginManifest`, `RESERVED_RUNTIME_FIELDS`, `MANIFEST_SCHEMA_URL` |
+| **Schema gen** | `generateManifestJsonSchema`, `checkSchemaDrift`, `writeManifestJsonSchema` |
+| **Runtime** | `z` (Zod instance re-export) |
+
 ## Compatibility policy
 
-- **Type-only imports** (`import type { … }`) are always safe — they are erased at compile time and add zero runtime weight.
+- **Type-only imports** (`import type { … }`) are always safe — erased at compile time, zero runtime weight.
 - **Runtime imports** (`z`, `parsePluginManifest`) require the `zod` peer dependency.
-- Breaking changes to the type contract will be accompanied by a major version bump.
-- The package is licensed Apache-2.0 — permissive for all use.
+- Breaking changes to the type contract are accompanied by a major version bump.
+- The package is pre-1.0; minor releases may include contract changes that are documented in the changelog.
+- Licensed Apache-2.0 — permissive for all use.
+
+## Reusable CI/CD workflows
+
+This repository also maintains two **reusable GitHub workflows** that plugin
+repositories call with `uses:` instead of copying CI/publish logic:
+
+| Workflow | Purpose |
+|---|---|
+| [`plugin-ci.yml`](.github/workflows/plugin-ci.yml) | Lint, typecheck, tests, version guard, validate, package, artifact upload. |
+| [`plugin-publish.yml`](.github/workflows/plugin-publish.yml) | Self-contained build + validated catalog publish (dry-run by default). |
+
+They run in the **caller's** context (caller checkout, caller token/secrets),
+invoke the caller's own `bun run` scripts + the `orgsdk-plugin` CLI, use
+SHA-pinned actions, frozen installs, full history, least-privilege
+permissions, and serialized non-cancelled publication. See
+[`docs/reusable-workflows.md`](docs/reusable-workflows.md) for the minimal
+caller workflow and exact template/Serper examples.
+
+A static guard over these workflows runs in the test suite:
+
+```sh
+bun run workflows:check
+```
 
 ## Publishing (npm)
 
@@ -89,9 +191,9 @@ To publish:
 
 1. **Set up npm auth:** Add an npm automation token as the `NPM_TOKEN` secret in the GitHub repository settings (Settings → Secrets and variables → Actions).
 2. **Create a release environment:** Create a `release` environment in GitHub (Settings → Environments) and add required reviewers if desired.
-3. **Tag a release:** `git tag v0.1.0 && git push origin v0.1.0` — the `release.yml` workflow runs typecheck, lint, tests, verifies `NPM_TOKEN`, then publishes with provenance.
+3. **Tag a release:** `git tag v0.2.0 && git push origin v0.2.0` — the `release.yml` workflow runs typecheck, lint, tests, verifies `NPM_TOKEN`, then publishes with provenance.
 
-The release workflow **never publishes on ordinary pushes** — only on explicit version tags or manual dispatch. It fails clearly if `NPM_TOKEN` is absent.
+The release workflow **never publishes on ordinary pushes** — only on manual dispatch. It fails clearly if `NPM_TOKEN` is absent.
 
 ## Repository
 

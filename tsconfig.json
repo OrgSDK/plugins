@@ -14,5 +14,5 @@
 		"types": ["bun-types"],
 		"forceConsistentCasingInFileNames": true
 	},
-	"include": ["src", "tests"]
+	"include": ["src", "tests", "scripts"]
 }

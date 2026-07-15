@@ -6,7 +6,13 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**", "!**/node_modules", "!**/dist", "!**/bun.lock"]
+		"includes": [
+			"**",
+			"!**/node_modules",
+			"!**/dist",
+			"!**/bun.lock",
+			"!**/schemas"
+		]
 	},
 	"formatter": {
 		"enabled": true,

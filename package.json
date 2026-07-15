@@ -1,19 +1,24 @@
 {
 	"name": "@orgsdk/plugins",
-	"version": "0.1.0",
-	"description": "Public authoring contract, types, and validation helpers for OrgSDK plugin developers.",
+	"version": "0.2.0",
+	"description": "Authoring contract, types, validation, and CLI for OrgSDK plugin developers.",
 	"type": "module",
 	"license": "Apache-2.0",
 	"main": "src/index.ts",
 	"types": "src/index.ts",
+	"bin": {
+		"orgsdk-plugin": "./src/cli.ts"
+	},
 	"exports": {
 		".": {
 			"types": "./src/index.ts",
 			"default": "./src/index.ts"
-		}
+		},
+		"./schema/plugin-manifest.v1.json": "./schemas/plugin-manifest.v1.json"
 	},
 	"files": [
 		"src",
+		"schemas",
 		"README.md",
 		"CHANGELOG.md",
 		"LICENSE"
@@ -27,6 +32,9 @@
 		"format": "biome format --write .",
 		"typecheck": "tsc --noEmit",
 		"test": "bun test",
+		"generate-schema": "bun scripts/generate-schema.ts",
+		"schema:check": "bun test tests/schema-drift.test.ts",
+		"workflows:check": "bun test tests/workflows.test.ts",
 		"pack:dry-run": "bun pm pack --dry-run"
 	},
 	"peerDependencies": {
@@ -43,7 +51,8 @@
 		"plugin",
 		"agent",
 		"sandbox",
-		"safe-functions"
+		"safe-functions",
+		"cli"
 	],
 	"repository": {
 		"type": "git",

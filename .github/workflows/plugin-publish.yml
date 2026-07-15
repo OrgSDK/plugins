@@ -1,0 +1,162 @@
+name: Plugin Catalog Publish (reusable)
+
+# Centrally maintained reusable catalog-publish workflow for OrgSDK plugin
+# repositories. Consumers call it with `uses:` — see docs/reusable-workflows.md.
+#
+# Runs in the CALLER's repository context. It builds + validates the caller's
+# plugin via the caller's own `bun run` scripts, then publishes with the
+# `orgsdk-plugin` CLI (shipped by @orgsdk/plugins, the caller's devDependency).
+#
+# Safety model:
+#   - Defaults to DRY-RUN (no network write). A real publish requires
+#     inputs.dry-run == false AND inputs.publish-enabled == "true" AND the
+#     ORGSDK_PUBLISH_TOKEN secret.
+#   - Serialized per caller repo+ref; in-flight runs are never cancelled.
+#   - The token is consumed only inside the CLI (Authorization header); it is
+#     never printed, logged, or echoed in errors.
+#   - Runs its own verification (typecheck/lint/test/validate/package) — it
+#     does not depend on the CI workflow's status check (defense in depth).
+
+on:
+  workflow_call:
+    inputs:
+      bun-version:
+        description: "Bun version to install (oven-sh/setup-bun)."
+        required: false
+        type: string
+        default: "1.3.9"
+      dry-run:
+        description: "Dry-run only — do not POST to the catalog."
+        required: false
+        type: boolean
+        default: true
+      publish-enabled:
+        description: "Opt-in gate. Pass vars.ORGSDK_ENABLE_CATALOG_PUBLISH — a real publish requires 'true'."
+        required: false
+        type: string
+        default: ""
+      catalog-url:
+        description: "Catalog base URL. Pass vars.ORGSDK_CATALOG_URL."
+        required: false
+        type: string
+        default: ""
+      artifact-name:
+        description: "Name for the uploaded dist/ artifact."
+        required: false
+        type: string
+        default: "plugin-artifact-publish"
+    secrets:
+      ORGSDK_PUBLISH_TOKEN:
+        description: "Catalog publisher token. Required only for a real publish."
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: catalog-publish
+    concurrency:
+      # Serialize per caller repo + ref; never cancel an in-flight publish.
+      group: plugin-publish-${{ github.repository }}-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      # actions/checkout@v4 — full history for the version guard (push events
+      # diff against github.event.before, which must be present in history).
+      - name: Checkout caller repo (full history)
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+
+      # oven-sh/setup-bun@v2
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: ${{ inputs.bun-version }}
+
+      - name: Install dependencies (frozen)
+        run: bun install --frozen-lockfile
+
+      - name: Version guard (no content change without a version bump)
+        env:
+          BASE_REF: ${{ github.event.before }}
+        run: bun run version-guard
+
+      - name: Verify (typecheck + lint + tests)
+        run: |
+          bun run typecheck
+          bun run check
+          bun run test
+
+      - name: Validate + package artifact
+        run: |
+          bun run validate
+          bun run package
+
+      - name: Resolve publish intent (opt-in gate + dry-run)
+        env:
+          DRY_RUN: ${{ inputs.dry-run }}
+          GATE: ${{ inputs.publish-enabled }}
+        run: |
+          echo "dry_run=$DRY_RUN gate=$GATE"
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Publish mode: dry-run (no catalog write)."
+            echo "PUBLISH_MODE=dry-run" >> "$GITHUB_ENV"
+          elif [ "$GATE" = "true" ]; then
+            echo "Publish mode: real (catalog write)."
+            echo "PUBLISH_MODE=real" >> "$GITHUB_ENV"
+          else
+            echo "::error::Real publish requested but the opt-in gate is not 'true'."
+            echo "Set the repo variable ORGSDK_ENABLE_CATALOG_PUBLISH=true and re-run."
+            exit 1
+          fi
+
+      - name: Verify catalog URL (real publish only)
+        if: env.PUBLISH_MODE == 'real'
+        env:
+          CATALOG_URL: ${{ inputs.catalog-url }}
+        run: |
+          if [ -z "$CATALOG_URL" ]; then
+            echo "::error::catalog-url is empty. Set the ORGSDK_CATALOG_URL repo variable."
+            exit 1
+          fi
+
+      - name: Verify publish token (real publish only)
+        if: env.PUBLISH_MODE == 'real'
+        env:
+          ORGSDK_PUBLISH_TOKEN: ${{ secrets.ORGSDK_PUBLISH_TOKEN }}
+        run: |
+          if [ -z "$ORGSDK_PUBLISH_TOKEN" ]; then
+            echo "::error::ORGSDK_PUBLISH_TOKEN secret is not set."
+            exit 1
+          fi
+
+      # Token is injected ONLY for the real-publish step. The orgsdk-plugin CLI
+      # reads ORGSDK_PUBLISH_TOKEN from env and places it solely in the
+      # Authorization header; it is never logged or echoed.
+      - name: Publish to catalog (real)
+        if: env.PUBLISH_MODE == 'real'
+        env:
+          ORGSDK_PUBLISH_TOKEN: ${{ secrets.ORGSDK_PUBLISH_TOKEN }}
+          CATALOG_URL: ${{ inputs.catalog-url }}
+        run: bunx orgsdk-plugin publish --url "$CATALOG_URL" --publish
+
+      - name: Publish to catalog (dry-run)
+        if: env.PUBLISH_MODE != 'real'
+        env:
+          CATALOG_URL: ${{ inputs.catalog-url }}
+        run: |
+          if [ -z "$CATALOG_URL" ]; then
+            echo "Dry-run: catalog-url not set — skipping payload preview (artifact built above)."
+          else
+            bunx orgsdk-plugin publish --url "$CATALOG_URL"
+          fi
+
+      # actions/upload-artifact@v4 — keep the staged artifact for audit.
+      - name: Upload staged artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: dist/
+          retention-days: 30

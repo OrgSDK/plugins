@@ -1,0 +1,9 @@
+{
+	"name": "@orgsdk/plugin-sample",
+	"version": "0.4.2",
+	"type": "module",
+	"private": true,
+	"dependencies": {
+		"zod": "^4.0.0"
+	}
+}

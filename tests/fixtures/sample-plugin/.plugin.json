@@ -1,0 +1,24 @@
+{
+	"$schema": "https://orgsdk.ai/schemas/plugin-manifest.v1.json",
+	"name": "sample",
+	"version": "0.4.2",
+	"description": "A sample plugin for SDK tests.",
+	"entry": "index.ts",
+	"auth": {
+		"type": "token",
+		"provider": "sample",
+		"label": "Sample API key"
+	},
+	"marketplace": {
+		"displayName": "Sample",
+		"category": "Utilities",
+		"tagline": "A sample plugin.",
+		"tags": ["sample"],
+		"useCases": ["Test the SDK mechanics"],
+		"permissionsSummary": "Read-only sample calls.",
+		"links": {
+			"homepage": "https://example.com",
+			"docs": "https://example.com/docs"
+		}
+	}
+}

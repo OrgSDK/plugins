@@ -149,27 +149,9 @@ export interface McpSseConfig extends McpRemoteBaseConfig {
 
 export type McpRemoteServerConfig = McpHttpConfig | McpSseConfig;
 
-export interface PluginManifest {
-	name: string;
-	version: string;
-	description: string;
-	entry?: string;
-	auth?: {
-		type: "oauth2" | "token";
-		provider: string;
-		scopes?: string[];
-		callbackPath?: string;
-		firstParty?: boolean;
-		label?: string;
-		hint?: string;
-	};
-	tables?: PluginTableSchema[];
-	pluginType?: "native" | "mcp";
-	source?: "catalog" | "custom";
-	mcp?: McpRemoteServerConfig;
-	marketplace?: Record<string, unknown>;
-	[key: string]: unknown;
-}
+// The canonical plugin manifest type (AuthorManifest / PluginManifest) is
+// inferred from the Zod schema in manifest.ts — see that module. It is
+// re-exported from the package index.
 
 // ─── Auth + HTTP extension points ────────────────────────────────────────
 
