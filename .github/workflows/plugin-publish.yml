@@ -65,7 +65,7 @@ jobs:
       # actions/checkout@v4 — full history for the version guard (push events
       # diff against github.event.before, which must be present in history).
       - name: Checkout caller repo (full history)
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
 
