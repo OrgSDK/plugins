@@ -15,6 +15,33 @@ const VALID = {
 	auth: { type: "token", provider: "myprovider" },
 };
 
+const VALID_GUIDE = {
+	summary: "Create an OAuth client and paste its JSON.",
+	steps: [
+		{
+			title: "Create a project",
+			description: "Open the provider console.",
+			link: { label: "Console", url: "https://console.example.com/" },
+		},
+	],
+	callback: {
+		label: "Redirect URI",
+		instruction: "Paste under redirect URIs.",
+	},
+	configField: {
+		label: "OAuth client JSON",
+		description: "Paste the downloaded JSON.",
+		placeholder: '{ "web": { ... } }',
+	},
+	permissions: {
+		"https://api.example.com/scope": {
+			label: "Read and manage your data",
+			classification: "Restricted",
+		},
+	},
+	troubleshootingUrl: "https://help.example.com/oauth",
+};
+
 describe("parsePluginManifest", () => {
 	it("accepts a valid manifest", () => {
 		const data = parsePluginManifest(VALID);
@@ -131,6 +158,157 @@ describe("safeParsePluginManifest", () => {
 			...VALID,
 			pluginType: "mcp",
 			mcp: { transport: "http", url: "not-a-url" },
+		});
+		expect(result.success).toBe(false);
+	});
+});
+
+describe("auth.setupGuide", () => {
+	it("accepts a complete valid guide under auth", () => {
+		const result = safeParsePluginManifest({
+			...VALID,
+			auth: { type: "oauth2", provider: "p", setupGuide: VALID_GUIDE },
+		});
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.auth?.setupGuide?.summary).toBe(VALID_GUIDE.summary);
+			expect(result.data.auth?.setupGuide?.steps.length).toBe(1);
+		}
+	});
+
+	it("accepts a minimal guide (no optional fields)", () => {
+		const result = safeParsePluginManifest({
+			...VALID,
+			auth: {
+				type: "oauth2",
+				provider: "p",
+				setupGuide: {
+					summary: "s",
+					steps: [{ title: "t", description: "d" }],
+					configField: { label: "l", description: "desc" },
+				},
+			},
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("rejects a guide with an empty steps array", () => {
+		const result = safeParsePluginManifest({
+			...VALID,
+			auth: {
+				type: "oauth2",
+				provider: "p",
+				setupGuide: { ...VALID_GUIDE, steps: [] },
+			},
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects a non-https link url", () => {
+		const result = safeParsePluginManifest({
+			...VALID,
+			auth: {
+				type: "oauth2",
+				provider: "p",
+				setupGuide: {
+					...VALID_GUIDE,
+					steps: [
+						{
+							title: "t",
+							description: "d",
+							link: { label: "l", url: "http://insecure" },
+						},
+					],
+				},
+			},
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects a non-https troubleshootingUrl", () => {
+		const result = safeParsePluginManifest({
+			...VALID,
+			auth: {
+				type: "oauth2",
+				provider: "p",
+				setupGuide: { ...VALID_GUIDE, troubleshootingUrl: "ftp://x" },
+			},
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects an unknown field at the guide root (no arbitrary HTML)", () => {
+		const result = safeParsePluginManifest({
+			...VALID,
+			auth: {
+				type: "oauth2",
+				provider: "p",
+				setupGuide: { ...VALID_GUIDE, html: "<script/>" },
+			},
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects an unknown field inside a step", () => {
+		const result = safeParsePluginManifest({
+			...VALID,
+			auth: {
+				type: "oauth2",
+				provider: "p",
+				setupGuide: {
+					...VALID_GUIDE,
+					steps: [{ title: "t", description: "d", mischief: "x" }],
+				},
+			},
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects a guide missing the required configField", () => {
+		const { configField: _omit, ...rest } = VALID_GUIDE;
+		void _omit;
+		const result = safeParsePluginManifest({
+			...VALID,
+			auth: { type: "oauth2", provider: "p", setupGuide: rest },
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects a permission entry with an unknown field", () => {
+		const result = safeParsePluginManifest({
+			...VALID,
+			auth: {
+				type: "oauth2",
+				provider: "p",
+				setupGuide: {
+					...VALID_GUIDE,
+					permissions: {
+						"https://api.example.com/scope": {
+							label: "x",
+							html: "<b/>",
+						},
+					},
+				},
+			},
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects a permission entry missing the required label", () => {
+		const result = safeParsePluginManifest({
+			...VALID,
+			auth: {
+				type: "oauth2",
+				provider: "p",
+				setupGuide: {
+					...VALID_GUIDE,
+					permissions: {
+						"https://api.example.com/scope": {
+							classification: "x",
+						},
+					},
+				},
+			},
 		});
 		expect(result.success).toBe(false);
 	});

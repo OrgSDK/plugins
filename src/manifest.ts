@@ -15,6 +15,7 @@
 
 import { z } from "zod";
 import { formatManifestError } from "./manifest-error";
+import { setupGuideSchema } from "./setup-guide-schema";
 
 /** Stable, branded editor URL for the generated JSON Schema. */
 export const MANIFEST_SCHEMA_URL =
@@ -48,6 +49,9 @@ const authSchema = z
 			.optional()
 			.describe("Human label for the credential field."),
 		hint: z.string().optional().describe("Authoring hint shown to operators."),
+		setupGuide: setupGuideSchema
+			.optional()
+			.describe("Structured OAuth setup guide (e.g. Google BYO OAuth client)."),
 	})
 	.strict()
 	.describe("Credential declaration for the plugin.");

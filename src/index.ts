@@ -50,7 +50,6 @@ export {
 	safeParsePluginManifest,
 } from "./manifest";
 export type { DriftResult } from "./schema-gen";
-
 // JSON Schema generation + drift guard (release build / tests).
 export {
 	checkSchemaDrift,
@@ -58,6 +57,19 @@ export {
 	serializeManifestJsonSchema,
 	writeManifestJsonSchema,
 } from "./schema-gen";
+export type {
+	OAuthSetupGuide,
+	OAuthSetupGuideLink,
+	OAuthSetupGuidePermission,
+	OAuthSetupGuideStep,
+} from "./setup-guide-schema";
+// OAuth setup-guide schema + inferred types (Google BYO OAuth etc.).
+export {
+	setupGuideLinkSchema,
+	setupGuidePermissionSchema,
+	setupGuideSchema,
+	setupGuideStepSchema,
+} from "./setup-guide-schema";
 export type {
 	ConfigStore,
 	CredentialMetadata,

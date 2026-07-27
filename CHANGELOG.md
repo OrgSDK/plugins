@@ -6,6 +6,41 @@ This project follows [Keep a Changelog](https://keepachangelog.com/) and uses
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-07-27
+
+### Added
+- **`auth.setupGuide`** — author-owned structured OAuth setup-guide metadata
+  (first use: Google BYO OAuth). The canonical `auth` schema now accepts an
+  optional `setupGuide` object that the dashboard renders as an in-product
+  checklist instead of sending users to external docs. Structured plain text +
+  validated HTTPS links only — arbitrary HTML is not representable. Strict at
+  every level so a guide cannot carry unmodelled content.
+  - `summary` — plain-language summary (non-empty).
+  - `prerequisites` — optional list of prerequisite bullets.
+  - `steps` — ordered, non-empty array of `{ title, description, link? }`; each
+    step's optional `link` is `{ label, url }` with an HTTPS-only URL.
+  - `callback` — optional `{ label, instruction }` presentation for the
+    server-resolved callback URL.
+  - `configField` — required `{ label, description, placeholder? }` presentation
+    for the credential JSON field.
+  - `permissions` — optional `Record<scope, { label, classification? }>` keyed
+    by the exact OAuth scope value.
+  - `troubleshootingUrl` — optional HTTPS URL.
+- Exported public types: `OAuthSetupGuide`, `OAuthSetupGuideStep`,
+  `OAuthSetupGuideLink`, `OAuthSetupGuidePermission` (inferred from the Zod
+  schema), plus the sub-schemas `setupGuideSchema`, `setupGuideStepSchema`,
+  `setupGuideLinkSchema`, `setupGuidePermissionSchema`.
+- Schema validation tests covering acceptance of a complete guide, the minimal
+  form, and rejection of empty steps, non-HTTPS links, non-HTTPS troubleshooting
+  URLs, unknown fields at every level, and missing required fields.
+
+### Changed
+- Package version bumped to `0.2.2`.
+
+### Internal
+- Extracted setup-guide Zod schemas into `src/setup-guide-schema.ts` so the
+  schema module stays under the file-size budget after the setup-guide addition.
+
 ## [0.2.1] — 2026-07-15
 
 ### Added

@@ -116,6 +116,10 @@ Every manifest begins with the canonical `$schema` for editor completion:
   `minRuntimeVersion`, `links`), not free-form.
 - **Reserved fields:** `dependencies` and `bundled` are runtime-enriched by the catalog and rejected if set by an author.
 - **Semver:** `version` is validated as semver and must match `package.json`.
+- **`auth.setupGuide`:** an optional structured OAuth setup guide (e.g. Google
+  BYO OAuth client) declared under `auth`. Structured plain text + HTTPS-only
+  links; strict at every level. The dashboard renders it as an in-product
+  checklist.
 
 ```ts
 import { safeParsePluginManifest } from "@orgsdk/plugins";
@@ -150,8 +154,8 @@ bun run generate-schema
 
 | Category | Exports |
 |---|---|
-| **Types** | `SafeFunction`, `SafeFunctionMetadata`, `SafeFunctionDocs`, `PluginModule`, `PluginFactory`, `PluginContext`, `AuthorManifest`, `PluginManifest`, `AuthProvider`, `AuthMeta`, `HttpEndpoint`, `PluginConfigDefinition`, `PluginTableSchema`, `CredentialStore`, `ConfigStore`, `PluginLogger`, MCP types |
-| **Manifest** | `authorManifestSchema`, `pluginManifestSchema`, `parsePluginManifest`, `safeParsePluginManifest`, `RESERVED_RUNTIME_FIELDS`, `MANIFEST_SCHEMA_URL` |
+| **Types** | `SafeFunction`, `SafeFunctionMetadata`, `SafeFunctionDocs`, `PluginModule`, `PluginFactory`, `PluginContext`, `AuthorManifest`, `PluginManifest`, `AuthProvider`, `AuthMeta`, `HttpEndpoint`, `PluginConfigDefinition`, `PluginTableSchema`, `CredentialStore`, `ConfigStore`, `PluginLogger`, `OAuthSetupGuide`, `OAuthSetupGuideStep`, `OAuthSetupGuideLink`, `OAuthSetupGuidePermission`, MCP types |
+| **Manifest** | `authorManifestSchema`, `pluginManifestSchema`, `parsePluginManifest`, `safeParsePluginManifest`, `setupGuideSchema`, `RESERVED_RUNTIME_FIELDS`, `MANIFEST_SCHEMA_URL` |
 | **Schema gen** | `generateManifestJsonSchema`, `checkSchemaDrift`, `writeManifestJsonSchema` |
 | **Runtime** | `z` (Zod instance re-export) |
 
@@ -194,7 +198,7 @@ To publish:
 
 1. **Set up npm auth:** Add an npm automation token as the `NPM_TOKEN` secret in the GitHub repository settings (Settings → Secrets and variables → Actions).
 2. **Create a release environment:** Create a `release` environment in GitHub (Settings → Environments) and add required reviewers if desired.
-3. **Tag a release:** `git tag v0.2.1 && git push origin v0.2.1` — the `release.yml` workflow runs typecheck, lint, tests, verifies `NPM_TOKEN`, then publishes with provenance.
+3. **Tag a release:** `git tag v0.2.2 && git push origin v0.2.2` — the `release.yml` workflow runs typecheck, lint, tests, verifies `NPM_TOKEN`, then publishes with provenance.
 
 The release workflow **never publishes on ordinary pushes** — only on manual dispatch. It fails clearly if `NPM_TOKEN` is absent.
 
