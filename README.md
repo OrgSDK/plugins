@@ -1,5 +1,16 @@
 # @orgsdk/plugins
 
+## Current external plugin pipeline
+
+As of **31 October 2026**, plugins use the published `@orgsdk/plugins@0.2.2`
+and `@orgsdk/executor@0.1.0`. Restricted npm distribution, the packaging patch,
+full executor fixtures and CI live in independent plugin repositories. The
+canonical [pipeline templates](scripts/plugin-ci-templates/npm-distribution.md)
+and `scripts/sync-plugin-ci.mjs` maintain identical build/test/workflow copies;
+run the synchronizer with `--root=.. --check` to detect drift. Templates are
+repository maintenance assets, outside this toolkit's published npm file set.
+The public toolkit retains its separate manual release workflow.
+
 Authoring contract, types, validation, **CLI**, and release mechanics for **OrgSDK plugin developers**.
 
 This package is the single canonical contract between plugin authors and the OrgSDK runtime: the TypeScript types, the Zod manifest schema (from which the public type and JSON Schema are generated), the `orgsdk-plugin` CLI for validating, packaging, versioning, and publishing plugins, and the reusable library functions beneath it.

@@ -1,3 +1,8 @@
+# Unreleased
+
+- Refresh the Zod development lock to 4.6.7 and regenerate the manifest schema.
+- Maintain public Apache-2.0 npm payloads and headless executor/host-registration CI templates for plugin repositories.
+
 # Changelog
 
 All notable changes to `@orgsdk/plugins` are documented here.
