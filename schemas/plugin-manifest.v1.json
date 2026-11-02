@@ -475,21 +475,13 @@
 							"description": "A plugin-owned table column.",
 							"properties": {
 								"default": {
-									"anyOf": [
-										{
-											"type": "string"
-										},
-										{
-											"type": "number"
-										},
-										{
-											"type": "boolean"
-										},
-										{
-											"type": "null"
-										}
-									],
-									"description": "Column default value."
+									"description": "Column default value.",
+									"type": [
+										"string",
+										"number",
+										"boolean",
+										"null"
+									]
 								},
 								"description": {
 									"description": "Column documentation.",

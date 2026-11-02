@@ -61,5 +61,8 @@
 	"homepage": "https://github.com/OrgSDK/plugins#readme",
 	"bugs": {
 		"url": "https://github.com/OrgSDK/plugins/issues"
+	},
+	"overrides": {
+		"zod": "4.6.7"
 	}
 }
