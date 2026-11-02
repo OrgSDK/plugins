@@ -11,9 +11,14 @@ const root = resolve(
 	process.argv.find((arg) => arg.startsWith("--root="))?.slice(7) ?? "..",
 );
 const check = process.argv.includes("--check");
+const repositories = process.argv
+	.find((arg) => arg.startsWith("--repos="))
+	?.slice(8)
+	.split(",");
 const mapping = {
 	"build-npm.mjs": "scripts/build-npm.mjs",
 	"test-executor.mjs": "scripts/test-executor.mjs",
+	"npm-pack.test.mjs": "tests/npm-pack.test.mjs",
 	"test-registration.mjs": "scripts/test-registration.mjs",
 	"ci.yml": ".github/workflows/ci.yml",
 	"publish-npm.yml": ".github/workflows/publish-npm.yml",
@@ -24,6 +29,7 @@ let count = 0;
 for (const entry of await readdir(root, { withFileTypes: true })) {
 	if (!entry.isDirectory() || !entry.name.startsWith("orgsdk-plugin-"))
 		continue;
+	if (repositories && !repositories.includes(entry.name)) continue;
 	const repository = join(root, entry.name);
 	for (const [template, target] of Object.entries(mapping)) {
 		const destination = join(repository, target);
