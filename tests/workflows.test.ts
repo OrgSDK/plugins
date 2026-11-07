@@ -32,8 +32,8 @@ async function listWorkflows(): Promise<string[]> {
 	return all.filter((f) => f.endsWith(".yml")).sort();
 }
 
-/** owner/repo@<40+ hex chars>. Local (./…) and docker:// refs are allowed. */
-const SHA_PIN_RE = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+@[0-9a-f]{40,}$/;
+/** owner/repo@<40 hex chars>. Local (./…) and docker:// refs are allowed. */
+const SHA_PIN_RE = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+@[0-9a-f]{40}$/;
 /** Line-anchored `uses:` value (skips `uses:` mentions inside # comments). */
 const USES_RE = /^\s*-?\s*uses:\s*(\S+)/gm;
 /** Echo/printf/printenv of the token *value* ($VAR / ${VAR}) — a real leak. */
@@ -49,6 +49,18 @@ function everyUses(src: string): string[] {
 	}
 	return refs;
 }
+
+describe("npm release template", () => {
+	it("pins every action in publish and bootstrap jobs to a valid commit ID", async () => {
+		const source = await readFile(
+			resolve(WF_DIR, "../../scripts/plugin-ci-templates/publish-npm.yml"),
+			"utf8",
+		);
+		const actions = everyUses(source);
+		expect(actions.length).toBeGreaterThan(0);
+		for (const action of actions) expect(action).toMatch(SHA_PIN_RE);
+	});
+});
 
 describe("reusable workflows — plugin-ci.yml", () => {
 	it("is a workflow_call reusable workflow", async () => {
